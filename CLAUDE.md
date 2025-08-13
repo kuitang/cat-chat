@@ -41,3 +41,47 @@ This is a React-based Server-Sent Events (SSE) demonstration application with a 
 - Messages are displayed in chronological order with local timestamp formatting
 - Images have fallback error handling with graceful degradation
 - Both servers run in background using `nohup` with separate log files per session
+
+## Fly.io Deployment
+
+This application is configured for deployment on Fly.io with separate frontend and backend apps.
+
+### Prerequisites
+- Install Fly CLI: `curl -L https://fly.io/install.sh | sh`
+- Authenticate: `fly auth login`
+
+### Deployment Structure
+- **Backend app**: `cat-chat-backend` - Python SSE server
+- **Frontend app**: `cat-chat-frontend` - Static React build served by nginx
+
+### Deploy Commands
+1. **Deploy backend**: 
+   ```bash
+   cd backend && fly deploy
+   ```
+   
+2. **Deploy frontend**: 
+   ```bash
+   cd frontend && fly deploy
+   ```
+
+### Configuration Files
+- **backend/fly.toml**: Configures Python backend app
+  - Internal port: 8000
+  - Public URL: `https://cat-chat-backend.fly.dev`
+  - Auto-stop enabled to save resources
+  
+- **frontend/fly.toml**: Configures static frontend app
+  - Uses nginx to serve production build
+  - Internal port: 8080
+  - Public URL: `https://cat-chat-frontend.fly.dev`
+  - Backend URL configured via environment variable
+
+### Environment Variables
+- Frontend uses `REACT_APP_BACKEND_URL` to connect to backend
+- Set in frontend/fly.toml as `https://cat-chat-backend.fly.dev`
+
+### Monitoring
+- View logs: `fly logs -a cat-chat-backend` or `fly logs -a cat-chat-frontend`
+- Check app status: `fly status -a cat-chat-backend` or `fly status -a cat-chat-frontend`
+- List all apps: `fly apps list`
