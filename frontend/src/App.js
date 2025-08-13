@@ -12,7 +12,7 @@ function App() {
   };
 
   useEffect(() => {
-    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+    const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
     const eventSource = new EventSource(`${apiBaseUrl}/events`);
 
     eventSource.onmessage = (event) => {

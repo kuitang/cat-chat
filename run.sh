@@ -19,10 +19,17 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
+# Install backend dependencies if requirements.txt exists
+if [ -f "backend/requirements.txt" ]; then
+    echo "Installing backend dependencies..."
+    pip3 install -r backend/requirements.txt
+fi
+
 # Start backend server
 echo "Starting backend server..."
-nohup python3 backend.py > "$BACKEND_LOG" 2>&1 &
+cd backend && nohup uvicorn backend:app --host 0.0.0.0 --port 8000 > "../$BACKEND_LOG" 2>&1 &
 export BACKEND_PID=$!
+cd ..
 echo "Backend PID: $BACKEND_PID"
 echo "Backend log: $BACKEND_LOG"
 
@@ -42,7 +49,7 @@ echo "================================"
 echo "Servers are running!"
 echo ""
 echo "Frontend: http://localhost:3000"
-echo "Backend SSE: http://localhost:8080/events"
+echo "Backend SSE: http://localhost:8000/events"
 echo ""
 echo "To stop the servers, run:"
 echo "  kill $BACKEND_PID $FRONTEND_PID"

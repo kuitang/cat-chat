@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-import http.server
+import asyncio
 import json
 import logging
 import os
 import random
-import time
-import urllib.request
 from datetime import datetime
-from http import HTTPStatus
+from typing import AsyncGenerator
+
+import httpx
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,79 +29,80 @@ GREETINGS = [
     "Cat-tastic greetings!"
 ]
 
-def get_cat_image_url():
+app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+async def get_cat_image_url() -> str:
     """Fetch a random cat image URL from The Cat API"""
     try:
-        with urllib.request.urlopen('https://api.thecatapi.com/v1/images/search') as response:
-            data = json.loads(response.read().decode())
+        async with httpx.AsyncClient() as client:
+            response = await client.get('https://api.thecatapi.com/v1/images/search')
+            data = response.json()
             if data and len(data) > 0:
                 return data[0]['url']
     except Exception as e:
-        print(f"Error fetching cat image: {e}")
+        logging.error(f"Error fetching cat image: {e}")
     return "https://cataas.com/cat"  # Fallback URL
 
-class SSEHandler(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == '/events':
-            self.send_response(HTTPStatus.OK)
-            self.send_header('Content-Type', 'text/event-stream')
-            self.send_header('Cache-Control', 'no-cache')
-            self.send_header('Connection', 'keep-alive')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            
-            try:
-                while True:
-                    # Wait random 1-5 seconds between messages
-                    time.sleep(random.randint(1, 5))
-                    
-                    # Generate random message
-                    message = random.choice(GREETINGS)
-                    image = get_cat_image_url()
-                    timestamp = datetime.now().isoformat()
-                    
-                    # Create JSON data
-                    data = {
-                        'timestamp': timestamp,
-                        'message': message,
-                        'image': image
-                    }
-                    
-                    # Send SSE formatted message
-                    sse_data = f"data: {json.dumps(data)}\n\n"
-                    logging.info(f"Sending SSE event: message='{message}', image='{image}'")
-                    self.wfile.write(sse_data.encode('utf-8'))
-                    self.wfile.flush()
-                    
-            except (BrokenPipeError, ConnectionResetError):
-                # Client disconnected
-                pass
-            except Exception as e:
-                print(f"Error streaming events: {e}")
-                
-        else:
-            self.send_response(HTTPStatus.NOT_FOUND)
-            self.end_headers()
-            
-    def do_OPTIONS(self):
-        # Handle CORS preflight requests
-        self.send_response(HTTPStatus.OK)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
+async def generate_events() -> AsyncGenerator[str, None]:
+    """Generate SSE events"""
+    try:
+        # Send initial connection event
+        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now().isoformat()})}\n\n"
         
-    def log_message(self, format, *args):
-        # Override to prevent default logging to stderr
-        return
+        while True:
+            # Wait random 1-5 seconds between messages
+            await asyncio.sleep(random.randint(1, 5))
+            
+            # Generate random message
+            message = random.choice(GREETINGS)
+            image = await get_cat_image_url()
+            timestamp = datetime.now().isoformat()
+            
+            # Create JSON data
+            data = {
+                'timestamp': timestamp,
+                'message': message,
+                'image': image
+            }
+            
+            # Send SSE formatted message
+            sse_data = f"data: {json.dumps(data)}\n\n"
+            logging.info(f"Sending SSE event: message='{message}', image='{image}'")
+            yield sse_data
+            
+    except asyncio.CancelledError:
+        logging.info("Client disconnected")
+        raise
+    finally:
+        logging.info("Cleaning up SSE connection")
 
-def run_server(port=None):
-    if port is None:
-        port = int(os.environ.get('PORT', 8080))
-    server_address = ('', port)
-    httpd = http.server.HTTPServer(server_address, SSEHandler)
-    print(f"Server running on port {port}")
-    httpd.serve_forever()
+@app.get("/events")
+async def events():
+    """SSE endpoint"""
+    return StreamingResponse(
+        generate_events(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
-if __name__ == '__main__':
-    run_server()
+@app.get("/")
+async def root():
+    """Health check endpoint"""
+    return {"status": "ok", "message": "Cat Chat SSE Server"}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
