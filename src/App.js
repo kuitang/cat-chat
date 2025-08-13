@@ -16,7 +16,7 @@ function App() {
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setMessages(prevMessages => [...prevMessages, data]);
+      setMessages(prevMessages => [...prevMessages, data].slice(-100));
     };
 
     eventSource.onerror = (error) => {
