@@ -36,7 +36,7 @@ function App() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4">
             <h1 className="text-2xl font-light text-white">
-              SSE Chat Stream
+              Cat Chat 😺💕
             </h1>
             <p className="text-gray-400 text-sm mt-1">Real-time message streaming</p>
           </div>
