@@ -9,6 +9,8 @@ function App() {
   const timeoutRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
   const isNearBottomRef = useRef(true);
+  const scrollQueueRef = useRef([]);
+  const isScrollingRef = useRef(false);
 
   const checkIfNearBottom = useCallback(() => {
     if (messagesContainerRef.current) {
@@ -28,27 +30,71 @@ function App() {
     }
   }, []);
   
-  const scrollToBottom = useCallback(() => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
+  // Scroll Queue System:
+  // - Handles multiple rapid image loads with smooth sequential scrolling
+  // - Each image load adds a request to scrollQueueRef
+  // - Requests are processed one at a time with 400ms between animations
+  // - If queue > 3 items, instantly scrolls to avoid overwhelming the user
+  // - Queue clears if user manually scrolls away from bottom (isNearBottomRef = false)
+  // - "New Messages" button bypasses queue for instant scroll
+  const processScrollQueue = useCallback(() => {
+    if (!messagesContainerRef.current || !isNearBottomRef.current) {
+      scrollQueueRef.current = [];
+      isScrollingRef.current = false;
+      return;
     }
     
-    scrollTimeoutRef.current = setTimeout(() => {
-      if (messagesContainerRef.current && isNearBottomRef.current) {
-        messagesContainerRef.current.scrollTo({
-          top: messagesContainerRef.current.scrollHeight,
-          behavior: 'smooth'
-        });
+    // If queue is too long, instantly scroll and clear
+    if (scrollQueueRef.current.length > 3) {
+      scrollToBottomImmediate();
+      scrollQueueRef.current = [];
+      isScrollingRef.current = false;
+      return;
+    }
+    
+    // If queue is empty or already scrolling, nothing to do
+    if (scrollQueueRef.current.length === 0 || isScrollingRef.current) {
+      return;
+    }
+    
+    // Process next item in queue
+    isScrollingRef.current = true;
+    scrollQueueRef.current.shift(); // Remove the item we're processing
+    
+    messagesContainerRef.current.scrollTo({
+      top: messagesContainerRef.current.scrollHeight,
+      behavior: 'smooth'
+    });
+    
+    // After scroll animation completes, process next item
+    setTimeout(() => {
+      isScrollingRef.current = false;
+      if (scrollQueueRef.current.length > 0) {
+        processScrollQueue();
       }
-    }, 100);
-  }, []);
+    }, 400); // Allow time for smooth scroll to complete
+  }, [scrollToBottomImmediate]);
+  
+  const scrollToBottom = useCallback(() => {
+    if (!isNearBottomRef.current) {
+      return;
+    }
+    
+    // Add to queue
+    scrollQueueRef.current.push(Date.now());
+    
+    // Process queue
+    processScrollQueue();
+  }, [processScrollQueue]);
   
   const handleScrollToBottomClick = useCallback(() => {
     // Set flag to true to enable auto-scroll
     isNearBottomRef.current = true;
     // Hide the indicator
     setShowScrollIndicator(false);
-    // Scroll to bottom immediately
+    // Clear any pending scrolls and scroll immediately
+    scrollQueueRef.current = [];
+    isScrollingRef.current = false;
     scrollToBottomImmediate();
   }, [scrollToBottomImmediate]);
 
