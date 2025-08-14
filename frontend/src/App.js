@@ -3,6 +3,7 @@ import ChatMessage from './components/ChatMessage';
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const messagesContainerRef = useRef(null);
   const eventSourceRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -13,9 +14,20 @@ function App() {
     if (messagesContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
       isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 100;
+      
+      // Hide indicator if user scrolls to bottom manually
+      if (isNearBottomRef.current && showScrollIndicator) {
+        setShowScrollIndicator(false);
+      }
+    }
+  }, [showScrollIndicator]);
+
+  const scrollToBottomImmediate = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, []);
-
+  
   const scrollToBottom = useCallback(() => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -23,13 +35,19 @@ function App() {
     
     scrollTimeoutRef.current = setTimeout(() => {
       if (messagesContainerRef.current && isNearBottomRef.current) {
-        const lastMessage = messagesContainerRef.current.lastElementChild;
-        if (lastMessage) {
-          lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
       }
     }, 100);
   }, []);
+  
+  const handleScrollToBottomClick = useCallback(() => {
+    // Set flag to true to enable auto-scroll
+    isNearBottomRef.current = true;
+    // Hide the indicator
+    setShowScrollIndicator(false);
+    // Scroll to bottom immediately
+    scrollToBottomImmediate();
+  }, [scrollToBottomImmediate]);
 
   useEffect(() => {
     const createEventSource = () => {
@@ -54,6 +72,11 @@ function App() {
         const data = JSON.parse(event.data);
         setMessages(prevMessages => [...prevMessages, data].slice(-100));
         resetTimeout();
+        
+        // Show indicator if user is not at bottom when new message arrives
+        if (!isNearBottomRef.current) {
+          setShowScrollIndicator(true);
+        }
       };
 
       eventSource.onerror = (error) => {
@@ -87,6 +110,13 @@ function App() {
       }
     };
   }, []);
+  
+  // Auto-scroll when messages change and user is at bottom
+  useEffect(() => {
+    if (isNearBottomRef.current) {
+      scrollToBottomImmediate();
+    }
+  }, [messages, scrollToBottomImmediate]);
 
   return (
     <div className="h-full bg-gray-100 flex flex-col">
@@ -98,11 +128,12 @@ function App() {
             </h1>
           </div>
           
-          <div 
-            ref={messagesContainerRef} 
-            className="bg-gray-50 flex-1 overflow-y-auto p-3 sm:p-4 min-h-0 -webkit-overflow-scrolling-touch"
-            onScroll={checkIfNearBottom}
-          >
+          <div className="relative flex-1 min-h-0">
+            <div 
+              ref={messagesContainerRef} 
+              className="bg-gray-50 h-full overflow-y-auto p-3 sm:p-4 -webkit-overflow-scrolling-touch"
+              onScroll={checkIfNearBottom}
+            >
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <div className="relative">
@@ -120,6 +151,23 @@ function App() {
                     onImageLoad={scrollToBottom}
                   />
                 ))}
+              </div>
+            )}
+            </div>
+            
+            {showScrollIndicator && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none">
+                <button
+                  onClick={handleScrollToBottomClick}
+                  className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 pointer-events-auto"
+                  aria-label="Scroll to bottom"
+                >
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">New messages</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </button>
               </div>
             )}
           </div>
