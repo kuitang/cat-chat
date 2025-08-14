@@ -3,17 +3,18 @@ import React from 'react';
 function ChatMessage({ data, onImageLoad }) {
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleString();
+    return date.toLocaleTimeString();
   };
+
+  const catEmojis = ['🐱', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🐈', '🐈‍⬛'];
+  const randomCat = catEmojis[Math.floor(Math.random() * catEmojis.length)];
 
   return (
     <div className="group">
       <div className="flex gap-3">
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center shadow-sm">
-            <svg className="w-5 h-5 text-gray-200" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
+          <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center shadow-sm text-lg">
+            {randomCat}
           </div>
         </div>
         
@@ -45,10 +46,6 @@ function ChatMessage({ data, onImageLoad }) {
           <div className="flex items-center gap-3 px-1">
             <span className="text-xs text-gray-500">
               {formatTimestamp(data.timestamp)}
-            </span>
-            <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-400 font-mono">
-              ID: {new Date(data.timestamp).getTime()}
             </span>
           </div>
         </div>
