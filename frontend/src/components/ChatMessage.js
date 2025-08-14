@@ -26,19 +26,21 @@ function ChatMessage({ data, onImageLoad }) {
             
             {data.image && (
               <div className="border-t border-gray-100 p-3 bg-gray-50">
-                <img 
-                  src={data.image} 
-                  alt="Stream content" 
-                  className="rounded-md max-w-full h-auto shadow-md hover:shadow-lg transition-shadow duration-300"
-                  style={{ maxHeight: '400px', objectFit: 'cover' }}
-                  onLoad={onImageLoad}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    const parent = e.target.parentElement;
-                    parent.innerHTML = '<div className="text-gray-400 text-sm italic p-4 bg-gray-100 rounded">Image failed to load</div>';
-                    if (onImageLoad) onImageLoad();
-                  }}
-                />
+                <div className="relative" style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+                  <img 
+                    src={data.image} 
+                    alt="Stream content" 
+                    className="rounded-md shadow-md hover:shadow-lg transition-shadow duration-300"
+                    style={{ maxHeight: '50vh', width: 'auto', objectFit: 'contain' }}
+                    onLoad={onImageLoad}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      const parent = e.target.parentElement.parentElement;
+                      parent.innerHTML = '<div className="text-gray-400 text-sm italic p-4 bg-gray-100 rounded">Image failed to load</div>';
+                      if (onImageLoad) onImageLoad();
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>
