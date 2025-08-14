@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import random
-from datetime import datetime
+import time
 from typing import AsyncGenerator
 
 import httpx
@@ -59,7 +59,7 @@ async def generate_events() -> AsyncGenerator[str, None]:
             # Generate random message
             message = random.choice(GREETINGS)
             image = await get_cat_image_url()
-            timestamp = datetime.now().isoformat()
+            timestamp = int(time.time())
             
             # Create JSON data
             data = {
