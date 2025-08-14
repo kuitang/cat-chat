@@ -1,13 +1,26 @@
 # Dependencies
-/node_modules
+node_modules/*
+frontend/node_modules/*
 /.pnp
 .pnp.js
 
 # Testing
 /coverage
+**/coverage/
 
 # Production
 /build
+**/build/
+/dist
+**/dist/
+
+# Cache
+.cache/
+**/.cache/
+.eslintcache
+**/.eslintcache
+*.pack
+*.pack.old
 
 # Misc
 .DS_Store
@@ -19,6 +32,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
 # Logs
 logs/
@@ -33,3 +48,27 @@ __pycache__/
 env/
 venv/
 ENV/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk

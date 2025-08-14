@@ -55,13 +55,7 @@ async def get_cat_image_url() -> str:
 async def generate_events() -> AsyncGenerator[str, None]:
     """Generate SSE events"""
     try:
-        # Send initial connection event
-        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.now().isoformat()})}\n\n"
-        
         while True:
-            # Wait random 1-5 seconds between messages
-            await asyncio.sleep(random.randint(1, 5))
-            
             # Generate random message
             message = random.choice(GREETINGS)
             image = await get_cat_image_url()
@@ -78,6 +72,8 @@ async def generate_events() -> AsyncGenerator[str, None]:
             sse_data = f"data: {json.dumps(data)}\n\n"
             logging.info(f"Sending SSE event: message='{message}', image='{image}'")
             yield sse_data
+            # Wait random 1-5 seconds between messages
+            await asyncio.sleep(random.randint(1, 5))
             
     except asyncio.CancelledError:
         logging.info("Client disconnected")
