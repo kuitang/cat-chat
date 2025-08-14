@@ -13,7 +13,7 @@ function App() {
   const checkIfNearBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 100;
+      isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 250;
       
       // Hide indicator if user scrolls to bottom manually
       if (isNearBottomRef.current && showScrollIndicator) {
@@ -35,7 +35,10 @@ function App() {
     
     scrollTimeoutRef.current = setTimeout(() => {
       if (messagesContainerRef.current && isNearBottomRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
       }
     }, 100);
   }, []);
