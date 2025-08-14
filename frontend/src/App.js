@@ -114,18 +114,13 @@ function App() {
     };
   }, []);
   
-  // Auto-scroll when messages change and user is at bottom
-  useEffect(() => {
-    if (isNearBottomRef.current) {
-      scrollToBottomImmediate();
-    }
-  }, [messages, scrollToBottomImmediate]);
+  // Auto-scroll is now handled only when images load, not on message arrival
 
   return (
     <div className="h-full bg-gray-100 flex flex-col">
       <div className="flex-1 container mx-auto px-2 py-2 sm:px-4 sm:py-4 max-w-4xl flex flex-col min-h-0">
         <div className="flex-1 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-          <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-3">
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-3 shadow-md border-b border-gray-700">
             <h1 className="text-xl sm:text-2xl font-light text-white">
               Cat Chat 😺💕
             </h1>
@@ -134,7 +129,7 @@ function App() {
           <div className="relative flex-1 min-h-0">
             <div 
               ref={messagesContainerRef} 
-              className="bg-gray-50 h-full overflow-y-auto p-3 sm:p-4 -webkit-overflow-scrolling-touch"
+              className="bg-gray-50 h-full overflow-y-auto pt-1 px-3 pb-3 sm:px-4 sm:pb-4 -webkit-overflow-scrolling-touch"
               onScroll={checkIfNearBottom}
             >
             {messages.length === 0 ? (
