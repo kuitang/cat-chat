@@ -1,13 +1,43 @@
 name: Deploy to Fly.io
 
 on:
+  pull_request:
+  schedule:
+    - cron: '43 5 * * 2'
   push:
     branches:
       - main
   workflow_dispatch:
 
 jobs:
+  verify:
+    name: Verify application before release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.17'
+      - run: pip install -r backend/requirements.txt
+      - name: Check API routing without external services
+        working-directory: backend
+        run: |
+          python - <<'PYTEST'
+          from starlette.testclient import TestClient
+          from backend import app
+          with TestClient(app) as client:
+              assert client.get('/docs').status_code == 200
+              assert '/events' in client.get('/openapi.json').json()['paths']
+          PYTEST
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - run: npm ci && npm run build
+        working-directory: frontend
+
   deploy-backend:
+    needs: verify
+    if: github.event_name != 'pull_request'
     name: Deploy Backend to Fly.io
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +52,8 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   deploy-frontend:
+    needs: verify
+    if: github.event_name != 'pull_request'
     name: Deploy Frontend to Fly.io
     runs-on: ubuntu-latest
     steps:
