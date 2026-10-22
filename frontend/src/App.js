@@ -7,7 +7,6 @@ function App() {
   const messagesContainerRef = useRef(null);
   const eventSourceRef = useRef(null);
   const timeoutRef = useRef(null);
-  const scrollTimeoutRef = useRef(null);
   const isNearBottomRef = useRef(true);
   const scrollQueueRef = useRef([]);
   const isScrollingRef = useRef(false);
