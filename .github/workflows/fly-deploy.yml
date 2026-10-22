@@ -18,11 +18,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11.17'
-      - run: pip install -r backend/requirements.txt
+      - run: pip install --require-hashes -r backend/requirements.lock
       - name: Check API routing without external services
         working-directory: backend
         run: |
           python - <<'PYTEST'
+          from importlib.metadata import version
+          from pathlib import Path
+          from pip._vendor.packaging.requirements import Requirement
+          for line in Path("requirements.txt").read_text().splitlines():
+              if line.strip():
+                  req = Requirement(line)
+                  assert version(req.name) in req.specifier, f"Regenerate requirements.lock for {req}"
           from starlette.testclient import TestClient
           from backend import app
           with TestClient(app) as client:
