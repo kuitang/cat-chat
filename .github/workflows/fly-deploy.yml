@@ -29,7 +29,7 @@ jobs:
               assert client.get('/docs').status_code == 200
               assert '/events' in client.get('/openapi.json').json()['paths']
           PYTEST
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24.22.1'
       - run: npm ci && npm run build
