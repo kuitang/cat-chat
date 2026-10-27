@@ -53,7 +53,7 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       
       - name: Deploy Backend to Fly.io
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --no-cache
         working-directory: ./backend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       
       - name: Deploy Frontend to Fly.io
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --no-cache
         working-directory: ./frontend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
