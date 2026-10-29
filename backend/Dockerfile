@@ -1,4 +1,4 @@
-FROM python:3.11.18-slim-trixie
+FROM python:3.15.0-slim-trixie
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade "pip>=26.2.0" "setuptools>=83.0.0" "wheel>=0.46.2" && pip install --no-cache-dir --require-hashes -r requirements.txt
