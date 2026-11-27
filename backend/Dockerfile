@@ -1,4 +1,4 @@
-FROM python:3.11.18-slim-trixie
+FROM python:3.15.1-slim-trixie
 RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY requirements.txt .
