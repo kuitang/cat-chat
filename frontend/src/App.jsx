@@ -99,7 +99,7 @@ function App() {
 
   useEffect(() => {
     const createEventSource = () => {
-      const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
+      const apiBaseUrl = import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
       const eventSource = new EventSource(`${apiBaseUrl}/events`);
 
       const resetTimeout = () => {
